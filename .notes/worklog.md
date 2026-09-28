@@ -105,3 +105,33 @@ left unfinished. Append as you go; a line or two per entry is right.
   infrastructure in `lib/` (`apiClient`, `queryClient`). Features keep only feature code.
   `CapacityGrid` split into the table and `PersonRow`. Components don't set their own outer
   margins — callers own layout. Files: PascalCase components, camelCase modules.
+
+## Row virtualisation
+
+- Measured before deciding: production build in headless Chrome, synthetic rosters served by
+  request interception (DB and seed untouched), median of 3 runs on a fast Mac.
+
+  | roster × weeks | first render   | DOM nodes    | edit → confirmed |
+  |----------------|----------------|--------------|------------------|
+  | 500 × 8        | 90 → 55 ms     | 7.8k → 545   | 52 → 34 ms       |
+  | 3,000 × 8      | 275 → 57 ms    | 47k → 545    | 160 → 33 ms      |
+  | 3,000 × 26     | 628 → 60 ms    | 111k → 1.1k  | 330 → 33 ms      |
+
+  Scrolling was smooth either way. Edits were slow even with one-row React re-renders: the browser
+  re-lays out the whole table.
+- TanStack Virtual (headless, keeps the real `<table>`). Each person is its own `<tbody>` so the
+  virtualiser measures the row plus its error line. Fixed column widths (`table-fixed`) —
+  otherwise columns resize as different names scroll into view; long names truncate with a title.
+- `aria-rowcount`/`aria-rowindex` so screen readers still get the roster size.
+- Trade-off: browser find-in-page can't reach rows that aren't rendered. A name filter is the
+  natural follow-up.
+- jsdom has no layout, so the grid test stubs `offsetHeight`/`offsetWidth` for the virtualiser.
+- Supersedes "Deferred: row virtualisation" under Week navigation.
+- Caught in review: virtualisation unmounts off-screen rows, and save status lived in each row's
+  `useMutation`, so scrolling away lost a pending save's lock (a second save could race it) and a
+  failed save's error. Save status now lives in the mutation cache: `mutationKey` per person, rows
+  read the latest with `useMutationState`. Failed saves use `gcTime: Infinity` so they wait for
+  Retry/Dismiss instead of expiring off screen; starting a save prunes that person's settled saves,
+  so the cache holds at most one per person. The cache patch is a mutation-level `onSuccess`, so it
+  runs even if the row unmounted. Verified by remount tests and by scrolling away and back in
+  headless Chrome; render cost unchanged.

@@ -4,13 +4,15 @@ import { ErrorNotice } from '../../components/ErrorNotice'
 import type { PersonCapacity } from './api'
 import { allocationStatus, type AllocationStatus } from './allocation'
 import { formatHours } from './format'
-import { useUpdateWeeklyHours } from './queries'
+import { useWeeklyHoursSave } from './queries'
 import { cell, stickyCell } from './tableStyles'
 import { WeeklyHoursEditor } from './WeeklyHoursEditor'
 
 type Props = {
   person: PersonCapacity
   weeks: string[]
+  index: number
+  measureRef: (element: HTMLElement | null) => void
 }
 
 const statusStyles: Record<AllocationStatus, string> = {
@@ -21,38 +23,43 @@ const statusStyles: Record<AllocationStatus, string> = {
 }
 
 // Memoised so a save, which replaces only the edited person, re-renders one row.
-export const PersonRow = memo(function PersonRow({ person, weeks }: Props) {
-  const save = useUpdateWeeklyHours(person.id)
-  const capacity = save.isPending ? save.variables : person.weeklyHours
+export const PersonRow = memo(function PersonRow({ person, weeks, index, measureRef }: Props) {
+  const { state, save, dismiss } = useWeeklyHoursSave(person.id)
+  const isSaving = state.status === 'pending'
+  const capacity = isSaving ? state.hours : person.weeklyHours
 
   return (
-    <>
-      <tr aria-busy={save.isPending} className={save.isPending ? 'opacity-60' : ''}>
-        <th scope="row" dir="auto" className={`${cell} ${stickyCell} left-0 text-left font-normal whitespace-nowrap`}>
-          {person.name}
-          {save.isPending && <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">Saving…</span>}
+    <tbody ref={measureRef} data-index={index}>
+      <tr aria-rowindex={index + 2} aria-busy={isSaving} className={isSaving ? 'opacity-60' : ''}>
+        <th scope="row" className={`${cell} ${stickyCell} left-0 text-left font-normal`}>
+          <div className="flex items-center gap-2">
+            <span dir="auto" title={person.name} className="truncate">
+              {person.name}
+            </span>
+            {isSaving && <span className="shrink-0 text-xs text-gray-500 dark:text-gray-400">Saving…</span>}
+          </div>
         </th>
         <td className={`${cell} text-right`}>
           <WeeklyHoursEditor
             name={person.name}
             hours={capacity}
-            disabled={save.isPending}
-            onSave={(hours) => save.mutate(hours)}
+            disabled={isSaving}
+            onSave={save}
           />
         </td>
         {weeks.map((week, i) => (
           <AllocationCell key={week} allocated={person.allocated[i]} capacity={capacity} />
         ))}
       </tr>
-      {save.isError && (
+      {state.status === 'error' && (
         <tr>
           <td colSpan={weeks.length + 2} className={cell}>
-            <ErrorNotice message={`Couldn't save ${formatHours(save.variables)}h for ${person.name}: ${save.error.message}`}>
+            <ErrorNotice message={`Couldn't save ${formatHours(state.hours)}h for ${person.name}: ${state.error.message}`}>
               <div className="mt-2 flex gap-2">
-                <Button variant="danger" onClick={() => save.mutate(save.variables)}>
+                <Button variant="danger" onClick={() => save(state.hours)}>
                   Retry
                 </Button>
-                <Button variant="dangerGhost" onClick={() => save.reset()}>
+                <Button variant="dangerGhost" onClick={dismiss}>
                   Dismiss
                 </Button>
               </div>
@@ -60,7 +67,7 @@ export const PersonRow = memo(function PersonRow({ person, weeks }: Props) {
           </td>
         </tr>
       )}
-    </>
+    </tbody>
   )
 })
 

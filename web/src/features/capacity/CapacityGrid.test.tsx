@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { CapacityResponse } from './api'
@@ -21,13 +21,13 @@ const fetchMock = vi.fn((path: string, init?: RequestInit) => {
   return Promise.resolve(Response.json(capacity))
 })
 
-function renderGrid() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  render(
+function renderGrid(client = new QueryClient({ defaultOptions: { queries: { retry: false } } })) {
+  const { unmount } = render(
     <QueryClientProvider client={client}>
       <CapacityGrid range={range} />
     </QueryClientProvider>,
   )
+  return { client, unmount }
 }
 
 function row(name: string) {
@@ -42,6 +42,15 @@ async function editWeeklyHours(name: string, value: string) {
   const notCancelled = fireEvent.keyDown(input, { key: 'Enter' })
   expect(notCancelled).toBe(false)
 }
+
+// jsdom has no layout; give elements a box so the virtualised grid renders rows.
+beforeAll(() => {
+  vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(800)
+  vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(1200)
+})
+afterAll(() => {
+  vi.restoreAllMocks()
+})
 
 describe('editing weekly hours', () => {
   beforeEach(() => {
@@ -84,6 +93,49 @@ describe('editing weekly hours', () => {
     fireEvent.click(within(alert).getByRole('button', { name: 'Retry' }))
     await waitFor(() => expect(screen.queryByRole('alert')).toBeNull())
     expect(within(row('Dee Okafor')).getByRole('button', { name: /currently 50/ })).toBeTruthy()
+  })
+
+  // Virtualised rows unmount when scrolled out of view; remounting the grid does the same to every row.
+  it('keeps a pending save and its lock when the row remounts', async () => {
+    let resolve!: (response: Response) => void
+    patchResponse = () => new Promise((r) => (resolve = r))
+    const { client, unmount } = renderGrid()
+
+    await editWeeklyHours('Dee Okafor', '50')
+    await within(row('Dee Okafor')).findByText('Saving…')
+    unmount()
+    const remounted = renderGrid(client)
+
+    expect(await within(row('Dee Okafor')).findByText('Saving…')).toBeTruthy()
+    const editButton = within(row('Dee Okafor')).getByRole('button', { name: /currently 50/ })
+    expect(editButton.getAttribute('aria-disabled')).toBe('true')
+
+    remounted.unmount()
+    resolve(Response.json({ id: 4, name: 'Dee Okafor', weeklyHours: 50 }))
+    await waitFor(() => expect(client.isMutating()).toBe(0))
+    renderGrid(client)
+    expect(await within(row('Dee Okafor')).findByRole('button', { name: /currently 50/ })).toBeTruthy()
+  })
+
+  it('keeps a failed save until it is dismissed, even across remounts', async () => {
+    patchResponse = async () => Response.json({ error: 'database unavailable' }, { status: 500 })
+    const { client, unmount } = renderGrid()
+
+    await editWeeklyHours('Dee Okafor', '50')
+    await screen.findByRole('alert')
+    unmount()
+    const remounted = renderGrid(client)
+
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toContain("Couldn't save 50h for Dee Okafor")
+    fireEvent.click(within(alert).getByRole('button', { name: 'Dismiss' }))
+    await waitFor(() => expect(screen.queryByRole('alert')).toBeNull())
+
+    remounted.unmount()
+    renderGrid(client)
+    await screen.findByText('Dee Okafor')
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(client.getMutationCache().getAll()).toHaveLength(0)
   })
 
   it('does not send invalid values', async () => {
