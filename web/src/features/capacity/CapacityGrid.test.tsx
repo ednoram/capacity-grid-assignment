@@ -1,6 +1,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { onlineManager, QueryClientProvider, type QueryClient } from '@tanstack/react-query';
+import { createQueryClient } from '../../lib/queryClient';
 import type { CapacityResponse } from './api';
 import { CapacityGrid } from './CapacityGrid';
 
@@ -21,7 +22,7 @@ const fetchMock = vi.fn((path: string, init?: RequestInit) => {
   return Promise.resolve(Response.json(capacity));
 });
 
-function renderGrid(client = new QueryClient({ defaultOptions: { queries: { retry: false } } })) {
+function renderGrid(client: QueryClient = createQueryClient()) {
   const { unmount } = render(
     <QueryClientProvider client={client}>
       <CapacityGrid range={range} />
@@ -57,6 +58,7 @@ describe('editing weekly hours', () => {
     vi.stubGlobal('fetch', fetchMock);
   });
   afterEach(() => {
+    onlineManager.setOnline(true);
     cleanup();
     fetchMock.mockClear();
     vi.unstubAllGlobals();
@@ -136,6 +138,21 @@ describe('editing weekly hours', () => {
     await screen.findByText('Dee Okafor');
     expect(screen.queryByRole('alert')).toBeNull();
     expect(client.getMutationCache().getAll()).toHaveLength(0);
+  });
+
+  it('fails an offline save into Retry instead of leaving it pending', async () => {
+    patchResponse = async () => {
+      throw new TypeError('Failed to fetch');
+    };
+    renderGrid();
+    await screen.findByText('Dee Okafor');
+    onlineManager.setOnline(false);
+
+    await editWeeklyHours('Dee Okafor', '50');
+    const alert = await screen.findByRole('alert');
+    expect(alert.textContent).toContain('Could not reach the server');
+    expect(within(row('Dee Okafor')).queryByText('Saving…')).toBeNull();
+    expect(within(alert).getByRole('button', { name: 'Retry' })).toBeTruthy();
   });
 
   it('does not send invalid values', async () => {

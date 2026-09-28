@@ -5,7 +5,11 @@ export function createQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
+        networkMode: 'always',
         retry: (failureCount, error) => isRetryable(error) && failureCount < 2,
+      },
+      mutations: {
+        networkMode: 'always',
       },
     },
   });

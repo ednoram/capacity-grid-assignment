@@ -141,3 +141,18 @@ left unfinished. Append as you go; a line or two per entry is right.
 - Two files had picked up an editor's Prettier defaults (double quotes, semicolons) and one was
   committed that way. Added Prettier (semicolons, single quotes, 120 columns) so editors and
   `npm run format` agree; `format:check` for CI.
+
+## Offline and refetch tuning
+
+- `networkMode: 'always'` for queries and mutations. The default pauses requests while
+  `navigator.onLine` is false: an offline save sat on "Saving…" (locked, no error), and an offline
+  first load sat on "Loading…". Now they fail into the existing error/Retry states. We only talk to
+  our own API, and `navigator.onLine` is unreliable anyway; `refetchOnReconnect` still catches up.
+- `staleTime: 60s` on capacity. Revisiting a range was already instant (cached data renders
+  first); this removes the background refetch of up to ~400KB on each week step back and forth.
+  Kept `refetchOnWindowFocus` — with a staleTime it only fires for data older than a minute, and
+  it's how a manager sees colleagues' edits.
+- Not added: mutation `scope` — two saves for one person can't overlap today (one row per person,
+  locked from shared save state; Retry only after a failure). It's the tool if a second edit
+  entry point (bulk edit) appears. Auto-retry on save — Retry is immediate and a retry only delays
+  the error.

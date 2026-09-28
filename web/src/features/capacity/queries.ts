@@ -29,6 +29,7 @@ export function useCapacity(range: WeekRange) {
     queryKey: capacityKeys.range(range),
     queryFn: ({ signal }) => fetchCapacity(range, signal),
     placeholderData: keepPreviousData,
+    staleTime: 60_000,
   });
 }
 
