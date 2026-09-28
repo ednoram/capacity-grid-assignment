@@ -22,10 +22,8 @@ type capacityResponse struct {
 
 // Allocated[i] is the hours booked in capacityResponse.Weeks[i].
 type personCapacity struct {
-	ID          int       `json:"id" db:"id"`
-	Name        string    `json:"name" db:"name"`
-	WeeklyHours float64   `json:"weeklyHours" db:"weekly_hours"`
-	Allocated   []float64 `json:"allocated" db:"allocated"`
+	person
+	Allocated []float64 `json:"allocated" db:"allocated"`
 }
 
 const capacityQuery = `

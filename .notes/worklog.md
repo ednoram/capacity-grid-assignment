@@ -25,3 +25,13 @@ left unfinished. Append as you go; a line or two per entry is right.
 - Review pass: weeks are computed once in Go and passed to the query as `date[]`, so the response
   and the SQL can't disagree. Dropped the range pre-filter — the per-week join already drives the
   index (3.4ms vs 5.0ms). Rounding left to the UI. pgx `CollectRows` covers what sqlx would add.
+
+## PATCH /api/people/{id}
+
+- Returns the updated person (`id, name, weeklyHours`) — the same shape as a capacity row minus
+  `allocated` (`personCapacity` embeds `person`). Allocations don't depend on `weekly_hours`, so
+  the client can merge this into the rows it holds; no range refetch needed.
+- Accepts 0–168 hours: 0 is a real value in the seed (Eli), 168 is the only hard ceiling. Unknown
+  fields are rejected so a typo like `weekly_hours` fails loudly instead of being ignored.
+- Last write wins. With several managers editing, an `updated_at`/version check (409 on conflict)
+  would be the next step.
