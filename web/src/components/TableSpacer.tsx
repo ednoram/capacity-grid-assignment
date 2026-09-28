@@ -5,5 +5,5 @@ export function TableSpacer({ height, columns }: { height: number; columns: numb
         <td colSpan={columns} style={{ height }} />
       </tr>
     </tbody>
-  )
+  );
 }

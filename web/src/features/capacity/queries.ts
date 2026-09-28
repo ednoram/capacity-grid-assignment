@@ -5,30 +5,22 @@ import {
   useQuery,
   useQueryClient,
   type MutationState,
-} from "@tanstack/react-query";
-import { removeSettledMutations } from "../../lib/queryClient";
-import {
-  fetchCapacity,
-  updateWeeklyHours,
-  type CapacityResponse,
-  type Person,
-} from "./api";
-import type { WeekRange } from "./weekRange";
+} from '@tanstack/react-query';
+import { removeSettledMutations } from '../../lib/queryClient';
+import { fetchCapacity, updateWeeklyHours, type CapacityResponse, type Person } from './api';
+import type { WeekRange } from './weekRange';
 
 const capacityKeys = {
-  all: ["capacity"] as const,
-  range: (range: WeekRange) =>
-    [...capacityKeys.all, range.from, range.to] as const,
+  all: ['capacity'] as const,
+  range: (range: WeekRange) => [...capacityKeys.all, range.from, range.to] as const,
 };
 
 const saveKeys = {
-  person: (personId: number) => ["updateWeeklyHours", personId] as const,
+  person: (personId: number) => ['updateWeeklyHours', personId] as const,
 };
 
 export type SaveState =
-  | { status: "idle" }
-  | { status: "pending"; hours: number }
-  | { status: "error"; hours: number; error: Error };
+  { status: 'idle' } | { status: 'pending'; hours: number } | { status: 'error'; hours: number; error: Error };
 
 type WeeklyHoursSave = MutationState<Person, Error, number>;
 
@@ -46,8 +38,7 @@ export function useWeeklyHoursSave(personId: number) {
 
   const { mutate } = useMutation({
     mutationKey,
-    mutationFn: (weeklyHours: number) =>
-      updateWeeklyHours(personId, weeklyHours),
+    mutationFn: (weeklyHours: number) => updateWeeklyHours(personId, weeklyHours),
     gcTime: Infinity,
     onMutate: () => removeSettledMutations(queryClient, mutationKey),
     onSuccess: (person) => {
@@ -58,7 +49,7 @@ export function useWeeklyHoursSave(personId: number) {
       // A range fetch that started before the save may still return the old value.
       void queryClient.invalidateQueries({
         queryKey: capacityKeys.all,
-        predicate: (query) => query.state.fetchStatus === "fetching",
+        predicate: (query) => query.state.fetchStatus === 'fetching',
       });
     },
   });
@@ -76,19 +67,15 @@ export function useWeeklyHoursSave(personId: number) {
 }
 
 function toSaveState(save: WeeklyHoursSave | undefined): SaveState {
-  if (save?.variables === undefined) return { status: "idle" };
-  if (save.status === "pending")
-    return { status: "pending", hours: save.variables };
-  if (save.status === "error" && save.error)
-    return { status: "error", hours: save.variables, error: save.error };
-  return { status: "idle" };
+  if (save?.variables === undefined) return { status: 'idle' };
+  if (save.status === 'pending') return { status: 'pending', hours: save.variables };
+  if (save.status === 'error' && save.error) return { status: 'error', hours: save.variables, error: save.error };
+  return { status: 'idle' };
 }
 
 function withPerson(data: CapacityResponse, person: Person): CapacityResponse {
   return {
     ...data,
-    people: data.people.map((p) =>
-      p.id === person.id ? { ...p, ...person } : p,
-    ),
+    people: data.people.map((p) => (p.id === person.id ? { ...p, ...person } : p)),
   };
 }

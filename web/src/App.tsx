@@ -1,9 +1,9 @@
-import { CapacityGrid, RangeControls, useWeekRangeParams, weeksStarting } from './features/capacity'
+import { CapacityGrid, RangeControls, useWeekRangeParams, weeksStarting } from './features/capacity';
 
-const DEFAULT_WEEKS = 8
+const DEFAULT_WEEKS = 8;
 
 export function App() {
-  const [range, setRange] = useWeekRangeParams(() => weeksStarting(new Date(), DEFAULT_WEEKS))
+  const [range, setRange] = useWeekRangeParams(() => weeksStarting(new Date(), DEFAULT_WEEKS));
 
   return (
     <main className="p-8">
@@ -13,5 +13,5 @@ export function App() {
       </header>
       <CapacityGrid range={range} />
     </main>
-  )
+  );
 }

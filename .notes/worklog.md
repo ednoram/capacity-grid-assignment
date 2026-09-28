@@ -135,3 +135,9 @@ left unfinished. Append as you go; a line or two per entry is right.
   so the cache holds at most one per person. The cache patch is a mutation-level `onSuccess`, so it
   runs even if the row unmounted. Verified by remount tests and by scrolling away and back in
   headless Chrome; render cost unchanged.
+
+## Formatting
+
+- Two files had picked up an editor's Prettier defaults (double quotes, semicolons) and one was
+  committed that way. Added Prettier (semicolons, single quotes, 120 columns) so editors and
+  `npm run format` agree; `format:check` for CI.
