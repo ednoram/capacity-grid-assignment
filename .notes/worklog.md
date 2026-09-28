@@ -35,3 +35,18 @@ left unfinished. Append as you go; a line or two per entry is right.
   fields are rejected so a typo like `weekly_hours` fails loudly instead of being ignored.
 - Last write wins. With several managers editing, an `updated_at`/version check (409 on conflict)
   would be the next step.
+
+## Grid, fixed range
+
+- Layout is by feature: `features/capacity/` holds the grid, its API call and the allocation
+  rule; `lib/api-client.ts` is the shared HTTP layer. The timeline view will be a sibling feature.
+- Over-allocated cells are red and show the overage (`+5`), so it doesn't rely on colour alone.
+  Any booking against 0 capacity counts as over (Eli). Hours are shown per week, capacity once
+  per row, rather than repeating `x / 40` in every cell.
+- Requests that fail with 4xx aren't retried; network errors and 5xx are retried twice. A failed
+  background refresh keeps the last numbers on screen with a notice rather than blanking the grid.
+- Week headers: `new Date('YYYY-MM-DD')` is UTC midnight, so they're formatted with
+  `timeZone: 'UTC'` — otherwise viewers west of UTC see the previous day.
+- Styling with Tailwind v4 (Vite plugin, no config file). First pass used plain CSS with
+  hand-picked hex colours — replaced so colours come from one palette with dark variants, and the
+  status → colour mapping lives in one table in the grid.
