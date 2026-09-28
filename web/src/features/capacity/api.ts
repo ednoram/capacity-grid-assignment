@@ -1,4 +1,4 @@
-import { request } from '../../lib/api-client'
+import { request } from '../../lib/apiClient'
 import type { WeekRange } from './weekRange'
 
 export type Person = {

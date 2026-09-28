@@ -34,7 +34,6 @@ export function weekCount(range: WeekRange): number {
   return differenceInCalendarISOWeeks(parseISO(range.to), parseISO(range.from)) + 1
 }
 
-// Moving one end past the other drags it along; the span never exceeds MAX_WEEKS.
 export function withFrom(range: WeekRange, from: string): WeekRange {
   const start = startOfISOWeek(parseISO(from))
   const end = max([parseISO(range.to), start])

@@ -1,7 +1,4 @@
-import { CapacityGrid } from './features/capacity/CapacityGrid'
-import { RangeControls } from './features/capacity/RangeControls'
-import { useWeekRangeParams } from './features/capacity/useWeekRangeParams'
-import { weeksStarting } from './features/capacity/weekRange'
+import { CapacityGrid, RangeControls, useWeekRangeParams, weeksStarting } from './features/capacity'
 
 const DEFAULT_WEEKS = 8
 
@@ -10,8 +7,10 @@ export function App() {
 
   return (
     <main className="p-8">
-      <h1 className="mb-4 text-2xl font-semibold">Team capacity</h1>
-      <RangeControls range={range} onChange={setRange} />
+      <header className="mb-4 space-y-4">
+        <h1 className="text-2xl font-semibold">Team capacity</h1>
+        <RangeControls range={range} onChange={setRange} />
+      </header>
       <CapacityGrid range={range} />
     </main>
   )

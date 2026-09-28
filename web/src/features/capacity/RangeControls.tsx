@@ -1,3 +1,4 @@
+import { Button } from '../../components/Button'
 import {
   EARLIEST_DATE,
   isSupportedDate,
@@ -15,23 +16,21 @@ type Props = {
   onChange: (range: WeekRange) => void
 }
 
-const button =
-  'rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800'
 const dateInput = 'rounded-md border border-gray-300 px-2 py-1 text-sm dark:border-gray-700'
 
 export function RangeControls({ range, onChange }: Props) {
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-3">
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
       <div className="flex gap-2">
-        <button type="button" className={button} onClick={() => onChange(shiftWeeks(range, -1))}>
+        <Button onClick={() => onChange(shiftWeeks(range, -1))}>
           ← Previous week
-        </button>
-        <button type="button" className={button} onClick={() => onChange(weeksStarting(new Date(), weekCount(range)))}>
+        </Button>
+        <Button onClick={() => onChange(weeksStarting(new Date(), weekCount(range)))}>
           This week
-        </button>
-        <button type="button" className={button} onClick={() => onChange(shiftWeeks(range, 1))}>
+        </Button>
+        <Button onClick={() => onChange(shiftWeeks(range, 1))}>
           Next week →
-        </button>
+        </Button>
       </div>
       <div className="flex items-center gap-3 text-sm">
         <label className="flex items-center gap-2">

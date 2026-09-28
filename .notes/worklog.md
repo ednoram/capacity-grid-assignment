@@ -98,3 +98,10 @@ left unfinished. Append as you go; a line or two per entry is right.
   on Enter's `keypress`. Refocusing the edit button during Enter's `keydown` meant the same key
   press reopened the editor with the pre-save value. Fixed by cancelling the Enter keydown. jsdom
   doesn't emulate keypress activation, so the test asserts the keydown is cancelled instead.
+
+## Structure pass
+
+- Shared UI lives in `components/` (`Button` with variants, `ErrorNotice`, `PencilIcon`); shared
+  infrastructure in `lib/` (`apiClient`, `queryClient`). Features keep only feature code.
+  `CapacityGrid` split into the table and `PersonRow`. Components don't set their own outer
+  margins — callers own layout. Files: PascalCase components, camelCase modules.

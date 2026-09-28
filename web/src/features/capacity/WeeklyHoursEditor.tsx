@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { PencilIcon } from '../../components/PencilIcon'
 import { formatHours } from './format'
 
 // Must match maxWeeklyHours in api/people.go.
@@ -44,7 +45,7 @@ export function WeeklyHoursEditor({ name, hours, disabled, onSave }: Props) {
         className="group inline-flex w-full items-center justify-end gap-1.5 rounded-md border border-transparent px-2 py-0.5 hover:border-gray-300 hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-blue-600 aria-disabled:opacity-60 dark:hover:border-gray-700 dark:hover:bg-gray-900"
       >
         {formatHours(hours)}h
-        <PencilIcon />
+        <PencilIcon className="size-3.5 text-gray-400 group-hover:text-gray-700 dark:text-gray-600 dark:group-hover:text-gray-300" />
       </button>
     )
   }
@@ -105,19 +106,6 @@ export function WeeklyHoursEditor({ name, hours, disabled, onSave }: Props) {
         <span className="text-xs whitespace-nowrap text-gray-500 dark:text-gray-400">Enter to save · Esc to cancel</span>
       )}
     </div>
-  )
-}
-
-function PencilIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      className="size-3.5 text-gray-400 group-hover:text-gray-700 dark:text-gray-600 dark:group-hover:text-gray-300"
-    >
-      <path d="M13.6 2.9a2 2 0 0 1 2.8 0l.7.7a2 2 0 0 1 0 2.8L7.5 16H4v-3.5l9.6-9.6Zm-1.4 3.5L5.5 13.1V14.5h1.4l6.7-6.7-1.4-1.4Z" />
-    </svg>
   )
 }
 

@@ -15,8 +15,6 @@ export function useCapacity(range: WeekRange) {
   })
 }
 
-// The cache only ever holds confirmed values; while a save is pending the row
-// renders the mutation's variables instead, so a failure needs no rollback.
 export function useUpdateWeeklyHours(personId: number) {
   const queryClient = useQueryClient()
   return useMutation({
