@@ -19,7 +19,7 @@ describe('request', () => {
     stubFetch(async () => new Response('Bad Gateway', { status: 502 }))
     await expect(request('/api/capacity')).rejects.toMatchObject({
       status: 502,
-      message: 'Request failed with status 502',
+      message: 'The server is having trouble. Try again in a moment.',
     })
   })
 

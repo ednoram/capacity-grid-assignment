@@ -32,5 +32,7 @@ async function errorMessage(response: Response): Promise<string> {
   } catch {
     // Not JSON, e.g. a proxy error page.
   }
-  return `Request failed with status ${response.status}`
+  return response.status >= 500
+    ? 'The server is having trouble. Try again in a moment.'
+    : `Request failed with status ${response.status}`
 }

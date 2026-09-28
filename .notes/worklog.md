@@ -70,3 +70,31 @@ left unfinished. Append as you go; a line or two per entry is right.
 - Date inputs emit `0002-01-05` while a year is being typed; years outside 2000–2099 are ignored
   so the range doesn't jump around mid-typing.
 - Week headers now use date-fns like the rest of the date handling (dropped the UTC `Intl` trick).
+
+## Editing weekly hours
+
+- After a save the grid patches the cache from the PATCH response — no refetch. Allocations don't
+  depend on `weekly_hours`, so the returned person is the whole change. Every cached range is
+  patched, so navigating back doesn't show a stale value.
+- Optimistic via the UI, not the cache: while pending, the row renders the mutation's variables
+  (recoloured, dimmed, "Saving…"). The cache only holds confirmed values, so a failed save needs no
+  rollback — the row falls back to the confirmed number and an inline error offers Retry/Dismiss.
+- Race: a range fetch that started before the save could land after it with the old value. On
+  success, any in-flight capacity fetch is invalidated (cancelled and refetched). Not covered by a
+  test.
+- Enter or blur saves, Escape cancels; invalid input keeps the editor open. The row is locked while
+  its save is pending, so one person can't have two saves racing each other.
+- Rows are memoised and the patch swaps only the edited person's object, so a save re-renders one
+  row rather than the roster.
+- With the API down the Vite proxy answers 502 text/plain; 5xx without a JSON error now reads
+  "The server is having trouble" instead of a bare status code.
+- `MAX_WEEKLY_HOURS` (168) mirrors `maxWeeklyHours` in the Go API by hand.
+- First pass had no editing affordance (dotted underline only) and no pointer cursor — Tailwind v4
+  preflight sets `cursor: default` on buttons. Restored globally, and the capacity cell now looks
+  editable: pencil icon, hover border, "click to edit" in the header, key hints while editing.
+- Enter/Escape return focus to the edit button (keyboard users kept losing their place). The button
+  uses `aria-disabled` while saving because a `disabled` button can't hold focus.
+- Regression from the focus fix, caught by manual testing: Chrome/Safari activate a focused button
+  on Enter's `keypress`. Refocusing the edit button during Enter's `keydown` meant the same key
+  press reopened the editor with the pre-save value. Fixed by cancelling the Enter keydown. jsdom
+  doesn't emulate keypress activation, so the test asserts the keydown is cancelled instead.
