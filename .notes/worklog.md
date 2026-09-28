@@ -50,3 +50,23 @@ left unfinished. Append as you go; a line or two per entry is right.
 - Styling with Tailwind v4 (Vite plugin, no config file). First pass used plain CSS with
   hand-picked hex colours — replaced so colours come from one palette with dark variants, and the
   status → colour mapping lives in one table in the grid.
+
+## Week navigation and range
+
+- No API pagination or filtering. 500 people × 26 weeks measured 63KB, so a few thousand is
+  ~400KB uncompressed (the API doesn't gzip yet); the query cost scales with weeks, not history. Paging alphabetically would also break the
+  manager's actual question — who is over-committed — without server-side sorting. Worth adding
+  once teams/departments exist to filter by; the schema has none.
+- Deferred: row virtualisation. 500 rows is fine; at 3,000 × 28 columns (~84k cells) the DOM
+  becomes the bottleneck. Sticky header + first column make virtualising a real `<table>` fiddly.
+- Default range is this week plus seven: the point is seeing over-commitment before the week
+  starts. The seeded edge cases (Dec 2025/Jan 2026) are reachable via the date inputs or URL.
+- Range lives in the URL (`replaceState`, so week-stepping doesn't flood history). Invalid or
+  oversized params fall back to the default rather than erroring.
+- Navigating keeps the previous grid dimmed and `aria-busy` until the next range arrives;
+  superseded requests are aborted via the query signal.
+- Moving one end of the range past the other drags it along, and the UI clamps to 26 weeks —
+  `MAX_WEEKS` mirrors `maxWeeks` in the Go API by hand.
+- Date inputs emit `0002-01-05` while a year is being typed; years outside 2000–2099 are ignored
+  so the range doesn't jump around mid-typing.
+- Week headers now use date-fns like the rest of the date handling (dropped the UTC `Intl` trick).

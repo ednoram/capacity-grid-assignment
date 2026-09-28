@@ -1,15 +1,14 @@
 import type { ReactNode } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { format, parseISO } from 'date-fns'
 import { fetchCapacity, type PersonCapacity } from './api'
 import { allocationStatus, type AllocationStatus } from './allocation'
+import type { WeekRange } from './weekRange'
 
 type Props = {
-  from: string
-  to: string
+  range: WeekRange
 }
 
-// Week strings parse as UTC midnight, so they must be formatted in UTC too.
-const weekLabel = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', timeZone: 'UTC' })
 const hours = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 })
 
 const cell = 'border-b border-gray-200 px-3 py-2 dark:border-gray-800'
@@ -22,10 +21,11 @@ const statusStyles: Record<AllocationStatus, string> = {
   over: 'bg-red-50 font-semibold text-red-800 dark:bg-red-950 dark:text-red-200',
 }
 
-export function CapacityGrid({ from, to }: Props) {
-  const { data, error, refetch } = useQuery({
-    queryKey: ['capacity', from, to],
-    queryFn: ({ signal }) => fetchCapacity(from, to, signal),
+export function CapacityGrid({ range }: Props) {
+  const { data, error, refetch, isPlaceholderData } = useQuery({
+    queryKey: ['capacity', range.from, range.to],
+    queryFn: ({ signal }) => fetchCapacity(range, signal),
+    placeholderData: keepPreviousData,
   })
 
   if (!data) {
@@ -46,7 +46,13 @@ export function CapacityGrid({ from, to }: Props) {
   return (
     <>
       {error && <ErrorNotice message={`Couldn't refresh capacity, showing the last loaded numbers: ${error.message}`} />}
-      <div className="max-h-[calc(100vh-9rem)] overflow-auto">
+      <p role="status" className="mb-2 h-5 text-sm text-gray-500 dark:text-gray-400">
+        {isPlaceholderData && 'Updating…'}
+      </p>
+      <div
+        aria-busy={isPlaceholderData}
+        className={`max-h-[calc(100vh-12rem)] overflow-auto transition-opacity ${isPlaceholderData ? 'opacity-50' : ''}`}
+      >
         <table className="border-separate border-spacing-0 tabular-nums">
           <thead>
             <tr>
@@ -58,7 +64,7 @@ export function CapacityGrid({ from, to }: Props) {
               </th>
               {data.weeks.map((week) => (
                 <th scope="col" key={week} className={`${cell} ${stickyCell} top-0 z-10 text-right font-medium`}>
-                  <time dateTime={week}>{weekLabel.format(new Date(week))}</time>
+                  <time dateTime={week}>{format(parseISO(week), 'd MMM')}</time>
                 </th>
               ))}
             </tr>

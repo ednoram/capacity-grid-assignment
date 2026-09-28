@@ -1,4 +1,5 @@
 import { request } from '../../lib/api-client'
+import type { WeekRange } from './weekRange'
 
 export type PersonCapacity = {
   id: number
@@ -15,7 +16,7 @@ export type CapacityResponse = {
   people: PersonCapacity[]
 }
 
-export function fetchCapacity(from: string, to: string, signal?: AbortSignal): Promise<CapacityResponse> {
-  const params = new URLSearchParams({ from, to })
+export function fetchCapacity(range: WeekRange, signal?: AbortSignal): Promise<CapacityResponse> {
+  const params = new URLSearchParams(range)
   return request(`/api/capacity?${params}`, { signal })
 }
