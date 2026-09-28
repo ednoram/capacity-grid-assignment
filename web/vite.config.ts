@@ -1,9 +1,10 @@
 /// <reference types="vitest/config" />
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   server: {
     port: 3000,
     proxy: {
@@ -14,4 +15,4 @@ export default defineConfig({
     environment: 'jsdom',
     passWithNoTests: true,
   },
-})
+});

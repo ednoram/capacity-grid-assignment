@@ -1,17 +1,17 @@
-import { CapacityGrid } from './CapacityGrid'
+import { CapacityGrid, RangeControls, useWeekRangeParams, weeksStarting } from './features/capacity';
 
-// The range the grid loads. Widen it if you want to see more.
-const FROM = '2025-12-29'
-const TO = '2026-01-16'
+const DEFAULT_WEEKS = 8;
 
 export function App() {
+  const [range, setRange] = useWeekRangeParams(() => weeksStarting(new Date(), DEFAULT_WEEKS));
+
   return (
-    <main>
-      <h1>Team capacity</h1>
-      <p className="range">
-        {FROM} to {TO}
-      </p>
-      <CapacityGrid from={FROM} to={TO} />
+    <main className="p-8">
+      <header className="mb-4 space-y-4">
+        <h1 className="text-2xl font-semibold">Team capacity</h1>
+        <RangeControls range={range} onChange={setRange} />
+      </header>
+      <CapacityGrid range={range} />
     </main>
-  )
+  );
 }
