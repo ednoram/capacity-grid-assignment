@@ -156,3 +156,13 @@ left unfinished. Append as you go; a line or two per entry is right.
   locked from shared save state; Retry only after a failure). It's the tool if a second edit
   entry point (bulk edit) appears. Auto-retry on save — Retry is immediate and a retry only delays
   the error.
+
+## Seed patterns (late check)
+
+- Correction to the capacity entry: the 41,500 verified cells are 500 people × 83 weeks — the 57
+  weeks with bookings plus 26 empty ones. The generator runs two weeks on, one off, so every third
+  week has no bookings (12 Oct and 2 Nov 2026 are in the default view), and data ends 3 Jan 2027.
+- Generated people are never double-booked and never above 8h a day, so under the weekday rule
+  only part-timers (and hand-built Dee) can be over-allocated. Counting all seven days would
+  roughly triple the over-allocated count in a busy week (~140 vs ~40). 37% of bookings end on a
+  weekend, which suggests the generator worked in calendar days.
